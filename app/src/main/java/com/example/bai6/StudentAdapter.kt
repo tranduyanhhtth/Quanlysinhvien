@@ -16,6 +16,8 @@ class StudentAdapter(
     private val onUpdate: (Student, Int) -> Unit
 ) : ArrayAdapter<Student>(context, 0, students) {
 
+    private val db = StudentDatabase(context)
+
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = convertView ?: LayoutInflater.from(context)
             .inflate(R.layout.item_student, parent, false)
@@ -41,6 +43,7 @@ class StudentAdapter(
                     .setTitle("Xác nhận")
                     .setMessage("Bạn có chắc muốn xóa ${student.name}?")
                     .setPositiveButton("Xóa") { _, _ ->
+                        db.deleteStudent(student.mssv)
                         students.removeAt(position)
                         notifyDataSetChanged()
                     }

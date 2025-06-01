@@ -23,15 +23,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var listViewStudents: ListView
     private lateinit var studentAdapter: StudentAdapter
     private val students = ArrayList<Student>()
-    private lateinit var sharedPreferences: SharedPreferences
-    private val PREFS_NAME = "StudentPrefs"
-    private val KEY_STUDENTS = "students"
+//    private lateinit var sharedPreferences: SharedPreferences
+//    private val PREFS_NAME = "StudentPrefs"
+//    private val KEY_STUDENTS = "students"
+    private lateinit var db: StudentDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+//        sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        db = StudentDatabase(this)
         loadStudents()
 
         try {
@@ -43,13 +45,6 @@ class MainActivity : AppCompatActivity() {
                 startActivityForResult(intent, REQUEST_CODE_UPDATE)
             }
             listViewStudents.adapter = studentAdapter
-
-//            // Thêm dữ liệu mẫu nếu danh sách trống
-//            if (students.isEmpty()) {
-//                students.add(Student("Nguyen Van A", "SV001", "a@example.com", "0901234567"))
-//                saveStudents()
-//                studentAdapter.notifyDataSetChanged()
-//            }
 
             // Đăng ký context menu cho ListView
             registerForContextMenu(listViewStudents)
@@ -111,18 +106,29 @@ class MainActivity : AppCompatActivity() {
                 REQUEST_CODE_ADD -> {
                     val student = data?.getSerializableExtra("student") as? Student
                     if (student != null) {
-                        students.add(student)
-                        saveStudents()
+//                        students.add(student)
+//                        saveStudents()
+                        db.addStudent(student)
+                        loadStudents()
                         studentAdapter.notifyDataSetChanged()
+                        Toast.makeText(this, "Thêm sinh viên thành công", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this, "Lỗi thêm sinh viên", Toast.LENGTH_SHORT).show()
                     }
                 }
                 REQUEST_CODE_UPDATE -> {
                     val student = data?.getSerializableExtra("student") as? Student
                     val position = data?.getIntExtra("position", -1) ?: -1
                     if (student != null && position != -1) {
-                        students[position] = student
-                        saveStudents()
+//                        students[position] = student
+//                        saveStudents()
+//                        studentAdapter.notifyDataSetChanged()
+                        db.updateStudent(student)
+                        loadStudents()
                         studentAdapter.notifyDataSetChanged()
+                        Toast.makeText(this, "Cập nhật sinh viên thành công", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this, "Lỗi cập nhật sinh viên", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -146,21 +152,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveStudents() {
-        val gson = Gson()
-        val json = gson.toJson(students)
-        sharedPreferences.edit().putString(KEY_STUDENTS, json).apply()
-    }
+//    private fun saveStudents() {
+//        val gson = Gson()
+//        val json = gson.toJson(students)
+//        sharedPreferences.edit().putString(KEY_STUDENTS, json).apply()
+//    }
+
+//    private fun loadStudents() {
+//        val gson = Gson()
+//        val json = sharedPreferences.getString(KEY_STUDENTS, null)
+//        if (json != null) {
+//            val type = object : TypeToken<ArrayList<Student>>() {}.type
+//            val savedStudents = gson.fromJson<ArrayList<Student>>(json, type)
+//            students.clear()
+//            students.addAll(savedStudents)
+//        }
+//    }
 
     private fun loadStudents() {
-        val gson = Gson()
-        val json = sharedPreferences.getString(KEY_STUDENTS, null)
-        if (json != null) {
-            val type = object : TypeToken<ArrayList<Student>>() {}.type
-            val savedStudents = gson.fromJson<ArrayList<Student>>(json, type)
-            students.clear()
-            students.addAll(savedStudents)
-        }
+        students.clear()
+        students.addAll(db.getAllStudents())
+//        studentAdapter.notifyDataSetChanged()
     }
 
     companion object {
